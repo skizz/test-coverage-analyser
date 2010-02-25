@@ -3,22 +3,30 @@ package com.thoughtworks.jestr.jpda;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.Method;
+import com.sun.jdi.Bootstrap;
+import com.sun.jdi.connect.IllegalConnectorArgumentsException;
+import com.sun.jdi.connect.VMStartException;
+import com.sun.jdi.connect.LaunchingConnector;
+import com.sun.jdi.connect.Connector;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.MethodEntryRequest;
-import com.sun.jdi.request.ExceptionRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.event.*;
 
 import java.util.Set;
+import java.util.Map;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.IOException;
 
 public class JpdaTracer extends Thread {
     private VirtualMachine vm;
     private CoverageCollector collector;
 
-    public JpdaTracer(VirtualMachine vm) {
+    public JpdaTracer(VirtualMachine vm, CoverageCollector collector) {
         super("Jestr trace thread");
         this.vm = vm;
-        this.collector = new CoverageCollector();
+        this.collector = collector;
     }
 
     public void setup() {
@@ -72,5 +80,39 @@ public class JpdaTracer extends Thread {
 
     public Set<String> testersOf(String clazz) {
         return collector.testersOf(clazz);
+    }
+
+    static void redirect(final InputStream in, final PrintStream out) {
+        Runnable redirector = new Runnable() {
+            public void run() {
+                try {
+                    byte[] buffer = new byte[1024];
+                    int count;
+                    while ((count = in.read(buffer, 0, 1024)) >= 0) {
+                        out.write(buffer, 0, count);
+                    }
+                    out.flush();
+                } catch (IOException e) {
+                    System.err.println("Error redirecting stream: " + e);
+                }
+            }
+        };
+        Thread thread = new Thread(redirector, "Redirector");
+        thread.start();
+    }
+
+    public static void trace(String commandLine, CoverageCollector collector) throws IOException, IllegalConnectorArgumentsException, VMStartException, InterruptedException {
+        LaunchingConnector connector = Bootstrap.virtualMachineManager().defaultConnector();
+        Map<String, Connector.Argument> args = connector.defaultArguments();
+        Connector.Argument main = args.get("main");
+        main.setValue(commandLine);
+        VirtualMachine vm = connector.launch(args);
+        JpdaTracer tracer = new JpdaTracer(vm, collector);
+        tracer.start();
+        Process process = vm.process();
+        redirect(process.getErrorStream(), System.err);
+        redirect(process.getInputStream(), System.out);
+        vm.resume();
+        tracer.join();
     }
 }
