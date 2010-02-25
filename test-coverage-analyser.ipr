@@ -216,12 +216,12 @@
     <converter id="SelenaRunConfToDiana" />
   </component>
   <component name="ProjectKey">
-    <option name="state" value="project:///Users/skizz/Projects/jestr-jpda/jestr-jpda.ipr" />
+    <option name="state" value="project:///Users/skizz/Projects/test-coverage-analyser/test-coverage-analyser.ipr" />
   </component>
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/jestr-jpda.iml" filepath="$PROJECT_DIR$/jestr-jpda.iml" />
       <module fileurl="file://$PROJECT_DIR$/sample/sample.iml" filepath="$PROJECT_DIR$/sample/sample.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test-coverage-analyser.iml" filepath="$PROJECT_DIR$/test-coverage-analyser.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
