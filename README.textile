@@ -1,0 +1,15 @@
+h1. Test Coverage Analyser
+
+Monitors running tests to analyse what tests cover what pieces of code.
+
+h2. Run only changed tests in hg
+
+* Detect hg changes,
+* determine which tests cover those changed files
+* run only those changed tests (tlb)
+* report results
+
+h2. Warn about classes that have too much coverage
+
+h2. Warn about classes that have too little coverage
+

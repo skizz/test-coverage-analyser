@@ -14,6 +14,8 @@ import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.event.*;
 
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.io.IOException;
 public class JpdaTracer extends Thread {
     private VirtualMachine vm;
     private Collector collector;
+    List<String> classFilters = new ArrayList<String>();
 
     public JpdaTracer(VirtualMachine vm, Collector collector) {
         super("Jestr trace thread");
@@ -32,9 +35,15 @@ public class JpdaTracer extends Thread {
         EventRequestManager mgr = vm.eventRequestManager();
 
         MethodEntryRequest menr = mgr.createMethodEntryRequest();
-        menr.addClassFilter("com.foo.*");
+        for (String classFilter : classFilters) {
+            menr.addClassFilter(classFilter);
+        }
         menr.setSuspendPolicy(EventRequest.SUSPEND_NONE);
         menr.enable();
+    }
+
+    public void addClassFilter(String classFilter) {
+        classFilters.add(classFilter);
     }
 
     public void run() {
@@ -89,13 +98,19 @@ public class JpdaTracer extends Thread {
         thread.start();
     }
 
-    public static void trace(String commandLine, Collector collector) throws IOException, IllegalConnectorArgumentsException, VMStartException, InterruptedException {
+    public static void trace(String commandLine, Collector collector, String... classFilters) throws IOException, IllegalConnectorArgumentsException, VMStartException, InterruptedException {
+        if (classFilters.length == 0) {
+            throw new RuntimeException("At least one classFilter is required. E.g. 'com.foo.*'.");
+        }
         LaunchingConnector connector = Bootstrap.virtualMachineManager().defaultConnector();
         Map<String, Connector.Argument> args = connector.defaultArguments();
         Connector.Argument main = args.get("main");
         main.setValue(commandLine);
         VirtualMachine vm = connector.launch(args);
         JpdaTracer tracer = new JpdaTracer(vm, collector);
+        for (String classFilter : classFilters) {
+            tracer.addClassFilter(classFilter);
+        }
         tracer.start();
         Process process = vm.process();
         redirect(process.getErrorStream(), System.err);

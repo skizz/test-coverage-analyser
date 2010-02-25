@@ -31,4 +31,17 @@ public class CoverageCollector implements Collector {
         if (testersOfClass == null) return Collections.emptySet();
         return testersOfClass;
     }
+
+    public String report() {
+        StringBuilder report = new StringBuilder();
+        report.append("Class, Tester\n");
+        for (Map.Entry<String, Set<String>> entry : testers.entrySet()) {
+            for (String tester : entry.getValue()) {
+                report.append(entry.getKey()).append(", ");
+                report.append(tester);
+                report.append("\n");
+            }
+        }
+        return report.toString();  
+    }
 }
