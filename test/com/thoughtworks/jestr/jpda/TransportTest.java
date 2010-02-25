@@ -12,7 +12,7 @@ public class TransportTest {
 
     @Test
     public void shouldBeAbleToMonitorMethodCalls() throws VMStartException, IllegalConnectorArgumentsException, IOException, InterruptedException {
-        CoverageCollector collector = new CoverageCollector();
+        Collector collector = new PrintingCollector();
         String commandLine = "-cp lib/junit-4.8.1.jar:out/production/sample:out/test/sample org.junit.runner.JUnitCore com.foo.sample.SampleTest";
         JpdaTracer.trace(commandLine, collector);
     }

@@ -4,7 +4,7 @@ import sun.reflect.FieldAccessor;
 
 import java.util.*;
 
-public class CoverageCollector {
+public class CoverageCollector implements Collector {
     private String inTest = null;
     private Map<String, Set<String>> testers = new HashMap<String, Set<String>>();
 

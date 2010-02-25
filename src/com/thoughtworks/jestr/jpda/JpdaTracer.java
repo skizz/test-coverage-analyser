@@ -13,7 +13,6 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.event.*;
 
-import java.util.Set;
 import java.util.Map;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -21,9 +20,9 @@ import java.io.IOException;
 
 public class JpdaTracer extends Thread {
     private VirtualMachine vm;
-    private CoverageCollector collector;
+    private Collector collector;
 
-    public JpdaTracer(VirtualMachine vm, CoverageCollector collector) {
+    public JpdaTracer(VirtualMachine vm, Collector collector) {
         super("Jestr trace thread");
         this.vm = vm;
         this.collector = collector;
@@ -34,9 +33,6 @@ public class JpdaTracer extends Thread {
 
         MethodEntryRequest menr = mgr.createMethodEntryRequest();
         menr.addClassFilter("com.foo.*");
-//        for (int i=0; i<excludes.length; ++i) {
-//            menr.addClassExclusionFilter(excludes[i]);
-//        }
         menr.setSuspendPolicy(EventRequest.SUSPEND_NONE);
         menr.enable();
     }
@@ -67,19 +63,11 @@ public class JpdaTracer extends Thread {
     private void handleEvent(Event event) {
         if (event instanceof MethodEntryEvent) {
             Method method = ((MethodEntryEvent) event).method();
-            onMethodEntry(method.declaringType().name(), method.name());
+            collector.onMethod(method.declaringType().name(), method.name());
         }
     }
 
-    private void onMethodEntry(String className, String methodName) {
-        collector.onMethod(className, methodName);
-    }
-
     private void handleDisconnectedException() {
-    }
-
-    public Set<String> testersOf(String clazz) {
-        return collector.testersOf(clazz);
     }
 
     static void redirect(final InputStream in, final PrintStream out) {
@@ -101,7 +89,7 @@ public class JpdaTracer extends Thread {
         thread.start();
     }
 
-    public static void trace(String commandLine, CoverageCollector collector) throws IOException, IllegalConnectorArgumentsException, VMStartException, InterruptedException {
+    public static void trace(String commandLine, Collector collector) throws IOException, IllegalConnectorArgumentsException, VMStartException, InterruptedException {
         LaunchingConnector connector = Bootstrap.virtualMachineManager().defaultConnector();
         Map<String, Connector.Argument> args = connector.defaultArguments();
         Connector.Argument main = args.get("main");
